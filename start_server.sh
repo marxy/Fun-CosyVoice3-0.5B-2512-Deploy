@@ -11,16 +11,16 @@ MODELS_DIR="$SCRIPT_DIR/models"
 MODEL_PATH="$MODELS_DIR/Fun-CosyVoice3-0.5B"
 
 # 0. 初始化并激活 Conda 环境
-eval "$(conda shell.bash hook)"
-
-if ! conda env list | grep -q "^${CONDA_ENV_NAME} "; then
-    echo "Error: Conda 环境 '$CONDA_ENV_NAME' 不存在"
-    echo "请先运行: ./install.sh"
-    exit 1
-fi
-
-echo "激活环境: $CONDA_ENV_NAME"
-conda activate "$CONDA_ENV_NAME"
+#eval "$(conda shell.bash hook)"
+#
+#if ! conda env list | grep -q "^${CONDA_ENV_NAME} "; then
+#    echo "Error: Conda 环境 '$CONDA_ENV_NAME' 不存在"
+#    echo "请先运行: ./install.sh"
+#    exit 1
+#fi
+#
+#echo "激活环境: $CONDA_ENV_NAME"
+#conda activate "$CONDA_ENV_NAME"
 
 # 设置 cuDNN 库路径 (ONNX Runtime GPU 加速)
 CUDNN_LIB=$(python -c "import nvidia.cudnn; print(nvidia.cudnn.__path__[0])" 2>/dev/null)/lib
