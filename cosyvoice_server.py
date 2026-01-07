@@ -209,7 +209,62 @@ async def inference_sft(
         prompt_text: Optional[str] = Form(default=None, description="自定义音色的提示文本"),
         prompt_wav: Optional[UploadFile] = File(default=None, description="自定义音色的参考音频")
 ):
-    return tts_stream(tts_text, spk_id, prompt_text, prompt_wav)
+    """
+    流式 TTS 接口
+
+    参数优先级:
+    1. voice_id: 使用预加载的音色 (推荐，零延迟)
+    2. prompt_text + prompt_wav: 自定义音色 (需实时计算特征)
+    3. 都不传: 使用默认音色
+
+    返回: 流式 PCM 音频数据 (采样率由 --output_sample_rate 控制, 16bit, Mono)
+    """
+    text = tts_text
+    voice_id = spk_id
+    if not text or len(text.strip()) == 0:
+        raise HTTPException(status_code=400, detail="文本不能为空")
+
+    # 处理自定义音色的参考音频
+    prompt_wav_data = None
+    if prompt_wav is not None:
+        prompt_wav_data = prompt_wav.file
+
+    # 记录日志
+    if voice_id:
+        logger.info(f"TTS 请求: text='{text[:50]}...', voice_id='{voice_id}'")
+    elif prompt_text:
+        logger.info(f"TTS 请求: text='{text[:50]}...', prompt_text='{prompt_text[:30]}...' (自定义音色)")
+    else:
+        logger.info(f"TTS 请求: text='{text[:50]}...', voice_id='default'")
+
+    start_time = time.time()
+
+    def stream_generator():
+        first_chunk = True
+        total_bytes = 0
+        for chunk in generate_audio_stream(
+                text,
+                voice_id=voice_id,
+                prompt_text=prompt_text,
+                prompt_wav=prompt_wav_data,
+                stream=True
+        ):
+            if first_chunk:
+                logger.info(f"⚡ 首帧延迟: {(time.time() - start_time) * 1000:.0f}ms")
+                first_chunk = False
+            total_bytes += len(chunk)
+            yield chunk
+        logger.info(f"✅ TTS 完成: 总耗时 {(time.time() - start_time) * 1000:.0f}ms, 数据量 {total_bytes / 1024:.1f}KB")
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type="application/octet-stream",
+        headers={
+            "X-Sample-Rate": str(output_sample_rate),
+            "X-Channels": "1",
+            "X-Bits": "16"
+        }
+    )
 
 
 @app.post("/tts/stream")
