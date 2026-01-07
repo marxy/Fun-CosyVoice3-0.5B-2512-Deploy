@@ -3,7 +3,7 @@
 # 作者：凌封
 # 来源：https://aibook.ren (AI全书)
 
-set -e
+# set -e
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 CONDA_ENV_NAME="cosyvoice"
