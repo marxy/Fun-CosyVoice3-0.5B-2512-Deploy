@@ -203,7 +203,7 @@ async def health_check():
 
 
 @app.get("/inference_sft")
-async def tts_stream(
+async def inference_sft(
         tts_text: str = Form(..., description="要合成的文本"),
         spk_id: Optional[str] = Form(default=None, description="音色ID (使用预加载的音色，零延迟)"),
         prompt_text: Optional[str] = Form(default=None, description="自定义音色的提示文本"),
