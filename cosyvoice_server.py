@@ -50,7 +50,7 @@ VOICE_CONFIGS = [
     {
         "id": "default",  # 默认音色
         "file": "zero_shot_prompt.wav",  # asset/zero_shot_prompt.wav
-        "prompt_text": "You are a helpful assistant.<|endofprompt|>希望你以后能够做的比我还好呦。"
+        "prompt_text": "You are a helpful assistant.<|endofprompt|>各位同事，上午好，围绕打造数字政府AI+核心竞争力这个主题。"
     },
     # 添加更多音色示例 (取消注释并修改):
     {
@@ -96,8 +96,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
-
-
 
 
 
@@ -202,6 +200,16 @@ async def health_check():
         "default_voice": default_voice_id,
         **gpu_info
     })
+
+
+@app.get("/inference_sft")
+async def tts_stream(
+        tts_text: str = Form(..., description="要合成的文本"),
+        spk_id: Optional[str] = Form(default=None, description="音色ID (使用预加载的音色，零延迟)"),
+        prompt_text: Optional[str] = Form(default=None, description="自定义音色的提示文本"),
+        prompt_wav: Optional[UploadFile] = File(default=None, description="自定义音色的参考音频")
+):
+    return tts_stream(tts_text, spk_id, prompt_text, prompt_wav)
 
 
 @app.post("/tts/stream")
